@@ -100,6 +100,11 @@ mac_address = "1.1"
 sciter-rs = { git = "https://github.com/rustdesk-org/rust-sciter", branch = "dyn" }
 sys-locale = "0.3"
 enigo = { path = "libs/enigo", features = [ "with_serde" ] }
+# Second, independent copy of enigo (0.6.x) used ONLY by the Wayland EIS mouse
+# backend (src/server/eis_mouse.rs). The vendored 0.0.14 above keeps serving the
+# rest of the tree with its unchanged API, so nothing else has to migrate.
+# 0.6.x is the version that ships a real libei/ConnectToEIS backend.
+enigo6 = { package = "enigo", version = "0.6", default-features = false, features = [ "libei_tokio" ] }
 clipboard = { path = "libs/clipboard" }
 ctrlc = "3.2"
 # arboard = { version = "3.4", features = ["wayland-data-control"] }

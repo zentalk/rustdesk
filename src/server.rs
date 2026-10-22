@@ -51,6 +51,8 @@ pub(crate) mod drm_capturer;
 #[cfg(target_os = "linux")]
 pub mod uinput;
 #[cfg(target_os = "linux")]
+pub mod eis_mouse;
+#[cfg(target_os = "linux")]
 pub mod rdp_input;
 #[cfg(target_os = "linux")]
 pub mod dbus;

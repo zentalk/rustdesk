@@ -185,6 +185,15 @@ bytemuck = "1.23"
 ttf-parser = "0.25"
 
 [target.'cfg(target_os = "linux")'.dependencies]
+# Second, independent copy of enigo (0.6.x), used ONLY by the Wayland EIS mouse
+# backend (src/server/eis_mouse.rs). The vendored 0.0.14 above keeps serving the
+# rest of the tree with its unchanged API, so nothing else has to migrate.
+# 0.6.x is the version that ships a real libei/ConnectToEIS backend.
+#
+# Linux-only on purpose: it is built with `default-features = false` and only the
+# `libei_tokio` backend enabled, which does not exist on other platforms. Leaving
+# it in the shared dependency table would break the Windows/macOS builds.
+enigo6 = { package = "enigo", version = "0.6", default-features = false, features = [ "libei_tokio" ] }
 libxdo-sys = "0.11"
 psimple = { package = "libpulse-simple-binding", version = "2.27" }
 pulse = { package = "libpulse-binding", version = "2.27" }

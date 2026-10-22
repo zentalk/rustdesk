@@ -769,8 +769,35 @@ pub async fn setup_uinput(minx: i32, maxx: i32, miny: i32, maxy: i32) -> ResultT
     en.set_is_x11(false);
     // One lock for both, so there is no window where the keyboard is custom and the mouse is not.
     en.set_custom_keyboard(Box::new(keyboard));
+    // uinput mouse is installed first and keeps working immediately; the EIS backend
+    // (if it ever comes up) replaces it later from a background thread. See
+    // `super::eis_mouse` for why activation cannot happen here: the RemoteDesktop
+    // portal needs an approval prompt that is not persisted across server restarts,
+    // and `--server` is restarted hourly by the service while the operator is often
+    // remote and cannot click it.
     en.set_custom_mouse(Box::new(mouse));
+    drop(en);
+
+    // Never blocks: worst case the session simply stays on uinput.
+    #[cfg(target_os = "linux")]
+    super::eis_mouse::spawn_background_activation();
+
     Ok(())
+}
+
+/// Install `new` as the mouse backend and hand back the previous one.
+///
+/// The caller owns the returned value and must drop it on a thread that is not a
+/// tokio runtime: `UInputMouse` owns a `tokio::runtime::Runtime`, and dropping one
+/// inside an async context panics with "Cannot drop a runtime in a context where
+/// blocking is not allowed".
+pub(crate) fn swap_mouse_backend(
+    new: Box<dyn MouseControllable + Send>,
+) -> Option<Box<dyn MouseControllable + Send>> {
+    let mut en = ENIGO.lock().unwrap();
+    let old = en.get_custom_mouse().take();
+    en.set_custom_mouse(new);
+    old
 }
 
 #[cfg(target_os = "linux")]
